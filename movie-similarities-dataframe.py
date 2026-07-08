@@ -46,9 +46,6 @@ ratingSchema = StructType([ \
     
     
 # Create a broadcast dataset of movieID and movieTitle.
-# Apply ISO-885901 charset
-
-
 # Load up movie data as dataset
 movies = spark.read \
       .option("sep", "::") \
@@ -81,6 +78,7 @@ moviePairs = ratings.alias("ratings1") \
         func.col("ratings2.movieId").alias("movie2"), \
         func.col("ratings1.rating").alias("rating1"), \
         func.col("ratings2.rating").alias("rating2"))
+
 
 
 moviePairSimilarities = computeCosineSimilarity(spark, moviePairs).cache()
