@@ -65,8 +65,8 @@ sc.setLogLevel("WARN")
 # ----------------------------
 # S3 paths (CHANGE THIS)
 # ----------------------------
-MOVIES_PATH = "s3a://spark-rev-571600835123-us-east-2-an/ml-1m/movies.dat"
-RATINGS_PATH = "s3a://spark-rev-571600835123-us-east-2-an/ml-1m/ratings.dat"
+MOVIES_PATH = "s3://spark-rev-571600835123-us-east-2-an/ml-1m/movies.dat"
+RATINGS_PATH = "s3://spark-rev-571600835123-us-east-2-an/ml-1m/ratings.dat"
 
 
 # ----------------------------
