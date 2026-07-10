@@ -1,0 +1,315 @@
+1. Data Cleaning
+
+Given a DataFrame like:
+
+id	name	age	city
+1	Alice	25	NY
+2	Bob	null	LA
+2	Bob	null	LA
+3	null	40	NY
+
+Ask the candidate to:
+
+Remove duplicates
+Fill missing ages with the average age
+Replace missing names with "Unknown"
+Filter people over 30
+
+Skills tested:
+
+dropDuplicates()
+fillna()
+aggregations
+filtering
+2. Group By and Aggregation
+
+Sales data:
+
+customer	product	amount
+A	Phone	500
+A	Laptop	1000
+B	Phone	700
+
+Questions:
+
+Total spend per customer
+Average purchase amount
+Highest spending customer
+
+Skills:
+
+groupBy
+agg
+sum
+avg
+orderBy
+
+3. Top N per Group
+
+Example:
+
+department	employee	salary
+IT	John	100
+IT	Mary	200
+IT	Alex	150
+
+Return the highest-paid employee in each department.
+
+Expected solution:
+
+Use a Window function.
+
+Tests:
+
+Window.partitionBy
+row_number
+rank
+dense_rank
+
+4. Joins
+
+Customers
+
+id	name
+1	Alice
+2	Bob
+
+Orders
+
+customer_id	amount
+1	100
+1	50
+3	25
+
+Questions:
+
+Inner join
+Left join
+Customers with no orders
+Total spend per customer
+
+Tests:
+
+joins
+null handling
+aggregations
+
+5. Find Duplicate Records
+
+Dataset:
+
+email
+-----
+a@test.com
+b@test.com
+a@test.com
+c@test.com
+
+Tasks:
+
+Find duplicate emails
+Count occurrences
+Keep only unique rows
+
+6. Window Function Challenge
+
+Transactions
+
+user	date	amount
+A	Jan1	10
+A	Jan2	20
+A	Jan3	15
+
+Questions:
+
+Running total
+Previous transaction
+Difference from previous transaction
+Rolling 7-day average
+
+Tests:
+
+lag
+lead
+cumulative sums
+window frames
+
+7. Sessionization
+
+Given clickstream events:
+
+user
+timestamp
+
+Create sessions where a new session starts if the gap exceeds 30 minutes.
+
+Tests:
+
+window functions
+timestamp arithmetic
+cumulative IDs
+
+8. Pivot Challenge
+
+Input
+
+Month	Product	Sales
+Jan	A	10
+Jan	B	15
+Feb	A	12
+
+Output
+
+Month	A	B
+Jan	10	15
+Feb	12	null
+
+Tests:
+
+pivot
+
+9. Explode Nested Data
+
+Input:
+
+[
+  ("Alice", ["Math", "Science"]),
+  ("Bob", ["History"])
+]
+
+Output:
+
+name	subject
+Alice	Math
+Alice	Science
+Bob	History
+
+Tests:
+
+arrays
+explode
+
+10. JSON Parsing
+
+Input:
+
+{
+  "customer":{
+      "id":1,
+      "city":"NY"
+  }
+}
+
+Tasks:
+
+Parse JSON
+Flatten nested columns
+Select nested fields
+
+Tests:
+
+from_json
+schemas
+structs
+
+11. Skew Handling
+
+Question:
+
+One customer has 50 million transactions while others have only a few hundred.
+
+Ask:
+
+Why is the job slow?
+How would you fix it?
+
+Expected discussion:
+
+salting keys
+broadcast joins
+repartitioning
+adaptive query execution
+skew join optimization
+
+13. Optimize a Slow Job
+
+Given code like:
+
+df.join(df2, "id").groupBy("city").count()
+
+Ask:
+
+How would you optimize this?
+
+Possible discussion:
+
+broadcast joins
+caching
+partition pruning
+predicate pushdown
+avoiding unnecessary shuffles
+choosing appropriate partition counts
+
+14. Read Multiple Files
+
+Tasks:
+
+Read all CSVs from a directory
+Infer schema (or define it explicitly)
+Add filename as a column
+Handle malformed records
+
+Tests:
+
+file ingestion
+schema management
+metadata columns
+
+15. End-to-End ETL Challenge (Excellent 60-minute Interview)
+
+Input:
+
+Orders:
+
+order_id
+customer_id
+date
+amount
+
+Customers:
+
+customer_id
+city
+segment
+
+Requirements:
+
+Clean missing values
+Remove duplicates
+Join datasets
+Calculate:
+total sales by city
+average order value by segment
+top 3 customers by spending
+Write the result partitioned by city
+
+Tests nearly every core PySpark skill:
+
+reading data
+joins
+aggregations
+window functions
+partitioned output
+
+Common Follow-Up Questions
+
+After a coding exercise, interviewers often ask conceptual questions such as:
+
+What causes a shuffle, and why is it expensive?
+When would you use cache() versus persist()?
+How do narrow and wide transformations differ?
+When should you use a broadcast join?
+How do coalesce() and repartition() differ?
+How do you diagnose a slow Spark job?
+What are stages, tasks, and partitions in Spark?
+How does Spark's lazy evaluation affect execution?

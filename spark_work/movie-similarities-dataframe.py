@@ -1,7 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as func
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, LongType
-from pyspark.sql.functions import udf
 import sys
 
 def computeCosineSimilarity(spark, data):
@@ -29,44 +28,47 @@ def computeCosineSimilarity(spark, data):
 
     return result
 
+# Get movie name by given movie id 
+def getMovieName(movieNames, movieId):
+    result_list = movieNames.filter(func.col("movieID") == movieId) \
+        .select("movieTitle").collect()
+    if result_list:
+        return result_list[0][0]
+    else:
+        return f"Unknown Movie (ID: {movieId})"
+
+
 spark = SparkSession.builder.appName("MovieSimilarities").master("local[*]").getOrCreate()
 spark.sparkContext.setLogLevel('WARN')
 
-movieSchema = StructType([ \
-                               StructField("movieId", IntegerType(), True), \
-                               StructField("movieTitle", StringType(), True), \
-                               StructField("genres", StringType())
+movieNamesSchema = StructType([ \
+                               StructField("movieID", IntegerType(), True), \
+                               StructField("movieTitle", StringType(), True) \
                                ])
     
-ratingSchema = StructType([ \
-                     StructField("userId", IntegerType(), True), \
-                     StructField("movieId", IntegerType(), True), \
+moviesSchema = StructType([ \
+                     StructField("userID", IntegerType(), True), \
+                     StructField("movieID", IntegerType(), True), \
                      StructField("rating", IntegerType(), True), \
                      StructField("timestamp", LongType(), True)])
     
     
 # Create a broadcast dataset of movieID and movieTitle.
+# Apply ISO-885901 charset
+movieNames = spark.read \
+      .option("sep", "|") \
+      .option("charset", "ISO-8859-1") \
+      .schema(movieNamesSchema) \
+      .csv("./ml-100k/u.item")
+
 # Load up movie data as dataset
 movies = spark.read \
-      .option("sep", "::") \
-      .schema(movieSchema) \
-      .csv("s3://spark-rev-571600835123-us-east-2-an/ml-1m/movies.dat")
-
-print("Loading ratings from S3...")
-ratings = spark.read \
-      .option("sep", "::") \
-      .schema(ratingSchema) \
-      .csv("s3://spark-rev-571600835123-us-east-2-an/ml-1m/ratings.dat")
+      .option("sep", "\t") \
+      .schema(moviesSchema) \
+      .csv("./ml-100k/u.data")
 
 
-ratings = ratings.select("userId", "movieId", "rating")
-
-print("Loading movie names from S3...")
-nameDict = spark.sparkContext.broadcast({
-    row["movieId"]: row["movieTitle"] for row in movies.collect()
-})
-
-
+ratings = movies.select("userId", "movieID", "rating")
 
 # Emit every movie rated together by the same user.
 # Self-join to find every combination.
@@ -80,17 +82,11 @@ moviePairs = ratings.alias("ratings1") \
         func.col("ratings2.rating").alias("rating2"))
 
 
-
 moviePairSimilarities = computeCosineSimilarity(spark, moviePairs).cache()
-
-output_path = "s3://spark-rev-571600835123-us-east-2-an/ml-output"
-
-print("Saving Results to S3")
-moviePairSimilarities.write.mode("overwrite").parquet(output_path)
 
 if (len(sys.argv) > 1):
     scoreThreshold = 0.97
-    coOccurrenceThreshold = 1500.0
+    coOccurrenceThreshold = 50.0
 
     # the 0 index always contains the script name, so the second one '1', has our first cli param
     movieID = int(sys.argv[1])
@@ -104,7 +100,7 @@ if (len(sys.argv) > 1):
     # Sort by quality score.
     results = filteredResults.sort(func.col("score").desc()).take(10)
     
-    print ("Top 10 similar movies for " + nameDict.value[movieID])
+    print ("Top 10 similar movies for " + getMovieName(movieNames, movieID))
     
     for result in results:
         # Display the similarity result that isn't the movie we're looking at
@@ -112,6 +108,5 @@ if (len(sys.argv) > 1):
         if (similarMovieID == movieID):
           similarMovieID = result.movie2
         
-        print(nameDict.value[similarMovieID] + "\tscore: " \
+        print(getMovieName(movieNames, similarMovieID) + "\tscore: " \
               + str(result.score) + "\tstrength: " + str(result.numPairs))
-        
